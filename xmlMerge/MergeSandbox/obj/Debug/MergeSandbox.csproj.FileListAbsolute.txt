@@ -1,0 +1,12 @@
+C:\Users\z923\Source\Workspaces\SW\.NET\xmlValidate\R49590\MergeSandbox\bin\Debug\MergeSandbox.exe.config
+C:\Users\z923\Source\Workspaces\SW\.NET\xmlValidate\R49590\MergeSandbox\bin\Debug\MergeSandbox.exe
+C:\Users\z923\Source\Workspaces\SW\.NET\xmlValidate\R49590\MergeSandbox\bin\Debug\MergeSandbox.pdb
+C:\Users\z923\Source\Workspaces\SW\.NET\xmlValidate\R49590\MergeSandbox\obj\Debug\MergeSandbox.csprojResolveAssemblyReference.cache
+C:\Users\z923\Source\Workspaces\SW\.NET\xmlValidate\R49590\MergeSandbox\obj\Debug\MergeSandbox.exe
+C:\Users\z923\Source\Workspaces\SW\.NET\xmlValidate\R49590\MergeSandbox\obj\Debug\MergeSandbox.pdb
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\bin\Debug\MergeSandbox.exe.config
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\obj\Debug\MergeSandbox.exe
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\obj\Debug\MergeSandbox.pdb
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\bin\Debug\MergeSandbox.exe
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\bin\Debug\MergeSandbox.pdb
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\obj\Debug\MergeSandbox.csprojResolveAssemblyReference.cache
