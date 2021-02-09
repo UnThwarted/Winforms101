@@ -19,7 +19,7 @@ namespace MergeSandbox
             XDocument xmlAvaloq = new XDocument(
                 new XDeclaration("1.0", "utf-8", "yes"),
 
-                new XComment("AValoq"),
+                new XComment("Avaloq"),
 
                 new XElement("Accounts",
                   new XElement("AccountReport",
@@ -97,17 +97,17 @@ namespace MergeSandbox
             XDocument xmlLegacy = new XDocument(
                 new XDeclaration("1.0", "utf-8", "yes"),
 
-                new XComment("AValoq"),
+                new XComment("Legacy"),
 
                 new XElement("Accounts",
                   new XElement("AccountReport",
-                    new XElement("Account", "bp1"),
+                    new XElement("Account", "HP111"),
                     new XElement("OrgName", "bp1 Org"),
                     new XElement("Individual",
                             new XComment("SCV:00020094"),
-                            new XElement("Person", "BP.0001"),
+                            new XElement("Person", "HP111AAA"),
                             new XElement("Name", "Abhishek"),
-                            new XElement("Payment", "111.10"),
+                            new XElement("Payment", "1000.90"),
                             new XElement("Location", "Mumbai"),
                             new XElement("Address", "off link road malad west Mumbai")
                                      ) // Individual
@@ -115,126 +115,51 @@ namespace MergeSandbox
                                              ,
 
                   new XElement("AccountReport",
-                    new XElement("Account", "bp2"),
+                    new XElement("Account", "HP222"),
                     new XElement("OrgName", "bp2 Org"),
                     new XElement("Individual",
                             new XComment("SCV:00022222"),
-                            new XElement("Person", "BP.0002"),
+                            new XElement("Person", "HP222AAA"),
                             new XElement("Name", "Rajesh"),
-                            new XElement("Payment", "222.20"),
+                            new XElement("Payment", "-50.20"),
                             new XElement("Location", "New Delhi"),
                             new XElement("Address", "off link road laljatnagar New delhi")
                                      ) // Individual
-                                 ) // AccountReport
-                                    ,
-
-                  new XElement("AccountReport",
-                    new XElement("Account", "bp3"),
-                    new XElement("OrgName", "bp3 Org"),
+                                     ,
                     new XElement("Individual",
-                            new XComment("SCV:00023333"),
-                            new XElement("Person", "BP.0003"),
-                            new XElement("Name", "Rohan"),
-                            new XElement("Payment", "333.30"),
-                            new XElement("Location", "Mumbai"),
-                            new XElement("Address", " link road Kandivali  west Mumbai")
-                                     ) // Individual
-                                 ) // AccountReport
-                                    ,
-
-                  new XElement("AccountReport",
-                    new XElement("Account", "bp4"),
-                    new XElement("OrgName", "bp4 Org"),
-                    new XElement("Individual",
-                            new XComment("SCV:00024444"),
-                            new XElement("Person", "BP.0004"),
-                            new XElement("Name", "Tony"),
-                            new XElement("Payment", "444.40"),
+                            new XComment("SCV:00022223"),
+                            new XElement("Person", "HP222S01"),
+                            new XElement("Name", "Dave Not Migrated"),
+                            new XElement("Payment", "15.15"),
                             new XElement("Location", "London"),
-                            new XElement("Address", " 25 Moorgate London")
+                            new XElement("Address", "1 The Street SE1 7NA")
                                      ) // Individual
                                  ) // AccountReport
                                     ,
 
                   new XElement("AccountReport",
-                    new XElement("Account", "bp7"),
-                    new XElement("OrgName", "bp7 Org"),
+                    new XElement("Account", "HP666"),
+                    new XElement("OrgName", "Legacy Only Org"),
                     new XElement("Individual",
-                            new XComment("SCV:02643827"),
-                            new XElement("Person", "BP.0007"),
-                            new XElement("Name", "Sonali"),
-                            new XElement("Payment", "555.50"),
-                            new XElement("Location", "Mumbai"),
-                            new XElement("Address", "khar west Mumbai")
+                            new XComment("SCV:00026666"),
+                            new XElement("Person", "HP666AAA"),
+                            new XElement("Name", "Bowie DECEASED JAN 2020"),
+                            new XElement("Payment", "2001.00"),
+                            new XElement("Location", "New York"),
+                            new XElement("Address", " CEEBEE GEEBEES Lower East Side NYC")
                                      ) // Individual
                                  ) // AccountReport
-                            ) // Accounts
+
+                                 ) // Accounts
                         );
 
             // Save 'em
             var directory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var AvqPath = Path.Combine(directory, "xmlValidate", @"AvaloqTest.xml");
-            var HPPath = Path.Combine(directory, "xmlValidate", @"HPTest.xml");
-            xmlAvaloq.Save(AvqPath);
-            xmlLegacy.Save(HPPath);
-
-            // Create second xml document
-            XDocument Legacy = new XDocument();
-            // Create mapping tables from Avaloq Ids to Legacy Ids
-            DataTable dt1 = new DataTable();
-            dt1.Columns.Add("Type", typeof(string)); // Account or Person
-            dt1.Columns.Add("AvaloqId", typeof(string)); // Avaloq Id
-            dt1.Columns.Add("LegacyId", typeof(string)); // Legacy ID
-            dt1.Columns.Add("SCVcode", typeof(string)); // SCVcode
-            dt1.Columns.Add("DOB", typeof(string)); // DOB
-
-            DataRow row = dt1.NewRow();
-            row["Type"] = "Account";
-            row["AvaloqId"] = "bp1";
-            row["LegacyId"] = "MO201";
-            row["SCVcode"] = String.Empty;
-            row["DOB"] = String.Empty;
-            dt1.Rows.Add(row);
-
-            row = dt1.NewRow();
-            row["Type"] = "Account";
-            row["AvaloqId"] = "bp3";
-            row["LegacyId"] = "SH203";
-            row["SCVcode"] = "2346173";
-            row["DOB"] = String.Empty;
-            dt1.Rows.Add(row);
-
-            row = dt1.NewRow();
-            row["Type"] = "Account";
-            row["AvaloqId"] = "bp5";
-            row["LegacyId"] = "NN425";
-            row["SCVcode"] = String.Empty;
-            row["DOB"] = String.Empty;
-            dt1.Rows.Add(row);
-
-            row = dt1.NewRow();
-            row["Type"] = "Account";
-            row["AvaloqId"] = "bp7";
-            row["LegacyId"] = "HI777";
-            row["SCVcode"] = "02643827";
-            row["DOB"] = String.Empty;
-            dt1.Rows.Add(row);
-
-            row = dt1.NewRow();
-            row["Type"] = "Person";
-            row["AvaloqId"] = "bp11";
-            row["LegacyId"] = "MO201AAA";
-            row["SCVcode"] = "08723461";
-            row["DOB"] = "1987-04-22";
-            dt1.Rows.Add(row);
-
-            row = dt1.NewRow();
-            row["Type"] = "Person";
-            row["AvaloqId"] = "bp43";
-            row["LegacyId"] = "MM222AAA";
-            row["SCVcode"] = "02346173";
-            row["DOB"] = "1963-08-13";
-            dt1.Rows.Add(row);
+            var avqPath = Path.Combine(directory, "xmlValidate", @"AvaloqTest.xml");
+            var hpPath = Path.Combine(directory, "xmlValidate", @"HPTest.xml");
+            var mapPath = Path.Combine(directory, "xmlValidate", @"MappingAvqFirst.csv");
+            xmlAvaloq.Save(avqPath);
+            xmlLegacy.Save(hpPath);
 
             // Present Menu
             ShowMenu();
@@ -253,7 +178,10 @@ namespace MergeSandbox
                         Viewxml(xmlAvaloq);
                         break;
                     case "2":
-                        Viewxml(Legacy);
+                        Viewxml(xmlLegacy);
+                        break;
+                    case "3":
+                        ViewMapping(mapPath);
                         break;
                     default:
                         break;
@@ -303,12 +231,75 @@ namespace MergeSandbox
             Console.WriteLine("\nhit Spacebar for menu");
         }
 
+        private static void ViewMapping(string mapPath)
+        {
+            Console.WriteLine("\nAvaloq to HP Mappings\n");
+            var mapAvqToHP = CSVToDictionary(mapPath, 0, 1);
+            if (mapAvqToHP.ContainsKey("*ERROR*"))
+            {
+                Dictionary<string, string>.ValueCollection values = mapAvqToHP.Values;
+                foreach (string message in values)
+                    Console.WriteLine("Error in mapping file : {0}\n\nhit Spacebar for menu", message);
+                return;
+            }
+            else
+            {
+                foreach (var avqToHP in mapAvqToHP)
+                    Console.WriteLine("AvqRef={0} HPRef={1}", avqToHP.Key.PadLeft(10), avqToHP.Value.PadLeft(10));
+            }
+
+            Console.WriteLine("\nHP to Avaloq Mappings\n");
+            var mapHPToAvq = CSVToDictionary(mapPath, 1, 0);
+
+            if (mapHPToAvq.ContainsKey("*ERROR*"))
+            {
+                Dictionary<string, string>.ValueCollection values = mapHPToAvq.Values;
+                foreach (string message in values)
+                    Console.WriteLine("Error in mapping file: {0}\n\nhit Spacebar for menu", message);
+                return;
+            }
+            else
+            {
+                foreach (var hpToAvq in mapHPToAvq)
+                    Console.WriteLine("HPRef={0} AvqRef={1}", hpToAvq.Key.PadLeft(10), hpToAvq.Value.PadLeft(10));
+            }
+            Console.WriteLine("\nhit Spacebar for menu");
+        }
         private static void InsertInAvq(XDocument xDocMain, string newChunk)
         {
             //xdoc.Element("Customers").Elements("Customer")
             //.Where(X => X.Attribute("ID").Value == "10003").SingleOrDefault()
             //.AddBeforeSelf(
         }
+
+        static Dictionary<string, string> CSVToDictionary(string path,int colForKey, int colForValue)
+        {
+            // Read the file
+            var data = System.IO.File.ReadAllLines(path);
+
+            // Check for duplicates
+            var listCola = data.Skip(1).Select(m => m.Split(','))
+                .Select(m => m[colForKey]);
+            var colaCount = listCola.Count();
+            var colaDistinct = listCola.Distinct().Count();
+
+            var listColb = data.Skip(1).Select(m => m.Split(','))
+                .Select(m => m[colForValue]);
+            var colbCount = listColb.Count();
+            var colbDistinct = listColb.Distinct().Count();
+
+            if ((colaCount != colaDistinct) || (colbCount != colbDistinct))
+            {
+                Dictionary<string, string> nada = new Dictionary<string, string>();
+                string info = (colaCount != colaDistinct) ? "Duplicate(s) found in Key Column " : "Duplicate(s) found in Value Column ";
+                nada.Add("*ERROR*", info);
+                return nada;
+            }
+
+            // Populate the dictionary from the CSV file using the specified columns
+            return data.Skip(1).Select(m => m.Split(',')).ToDictionary(m => m[colForKey], m => m[colForValue]);
+      }
+
 
     }
 
