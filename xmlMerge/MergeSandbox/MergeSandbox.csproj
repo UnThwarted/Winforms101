@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="DataSources\AvqClient.cs" />
     <Compile Include="DataSources\InputValues.cs" />
+    <Compile Include="HotTag.cs" />
+    <Compile Include="KeyedArray.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

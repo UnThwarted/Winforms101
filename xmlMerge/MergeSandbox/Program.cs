@@ -13,6 +13,8 @@ namespace MergeSandbox
 {
     class Program
     {
+        // HotTags to navigate each type of xml
+
         static void Main(string[] args)
         {
             // Create first xml document
@@ -29,10 +31,14 @@ namespace MergeSandbox
                             new XComment("SCV:00020094"),
                             new XElement("Person", "BP.0001"),
                             new XElement("Name", "Abhishek"),
-                            new XElement("Payment", "111.10"),
                             new XElement("Location", "Mumbai"),
                             new XElement("Address", "off link road malad west Mumbai")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "11111.10"),
+                    new XElement("Payment",
+                            new XElement("Type", "FATCA501"),
+                            new XElement("PaymentAmnt", new XAttribute("currCode", "EUR"), "111.10")
+                                ) // Payment
                                  ) // AccountReport
                                              ,
 
@@ -43,10 +49,11 @@ namespace MergeSandbox
                             new XComment("SCV:00022222"),
                             new XElement("Person", "BP.0002"),
                             new XElement("Name", "Rajesh"),
-                            new XElement("Payment", "222.20"),
                             new XElement("Location", "New Delhi"),
                             new XElement("Address", "off link road laljatnagar New delhi")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "22222.20"),
+                    new XElement("Payment", "222.20")
                                  ) // AccountReport
                                     ,
 
@@ -57,10 +64,11 @@ namespace MergeSandbox
                             new XComment("SCV:00023333"),
                             new XElement("Person", "BP.0003"),
                             new XElement("Name", "Rohan"),
-                            new XElement("Payment", "333.30"),
                             new XElement("Location", "Mumbai"),
                             new XElement("Address", " link road Kandivali  west Mumbai")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "33333.30"),
+                    new XElement("Payment", "333.30")
                                  ) // AccountReport
                                     ,
 
@@ -71,10 +79,11 @@ namespace MergeSandbox
                             new XComment("SCV:00024444"),
                             new XElement("Person", "BP.0004"),
                             new XElement("Name", "Tony"),
-                            new XElement("Payment", "444.40"),
                             new XElement("Location", "London"),
                             new XElement("Address", " 25 Moorgate London")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "44444.40"),
+                    new XElement("Payment", "444.40")
                                  ) // AccountReport
                                     ,
 
@@ -85,10 +94,11 @@ namespace MergeSandbox
                             new XComment("SCV:02643827"),
                             new XElement("Person", "BP.0007"),
                             new XElement("Name", "Sonali"),
-                            new XElement("Payment", "555.50"),
                             new XElement("Location", "Mumbai"),
                             new XElement("Address", "khar west Mumbai")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "55555.50"),
+                    new XElement("Payment", "555.50")
                                  ) // AccountReport
                             ) // Accounts
                         );
@@ -107,10 +117,11 @@ namespace MergeSandbox
                             new XComment("SCV:00020094"),
                             new XElement("Person", "HP111AAA"),
                             new XElement("Name", "Abhishek"),
-                            new XElement("Payment", "1000.90"),
                             new XElement("Location", "Mumbai"),
                             new XElement("Address", "off link road malad west Mumbai")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "100.11"),
+                    new XElement("Payment", "1000.90")
                                  ) // AccountReport
                                              ,
 
@@ -133,7 +144,9 @@ namespace MergeSandbox
                             new XElement("Payment", "15.15"),
                             new XElement("Location", "London"),
                             new XElement("Address", "1 The Street SE1 7NA")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "21111.10"),
+                    new XElement("Payment", "15.15")
                                  ) // AccountReport
                                     ,
 
@@ -147,7 +160,9 @@ namespace MergeSandbox
                             new XElement("Payment", "2001.00"),
                             new XElement("Location", "New York"),
                             new XElement("Address", " CEEBEE GEEBEES Lower East Side NYC")
-                                     ) // Individual
+                                     ), // Individual
+                    new XElement("Balance", "21111.10"),
+                    new XElement("Payment", "111.10")
                                  ) // AccountReport
 
                                  ) // Accounts
@@ -158,8 +173,22 @@ namespace MergeSandbox
             var avqPath = Path.Combine(directory, "xmlValidate", @"AvaloqTest.xml");
             var hpPath = Path.Combine(directory, "xmlValidate", @"HPTest.xml");
             var mapPath = Path.Combine(directory, "xmlValidate", @"MappingAvqFirst.csv");
+            Dictionary<string, string> mapHPToAvq = new Dictionary<string, string>();
+            Dictionary<string, string> mapAvqToHP = new Dictionary<string, string>();
+            XDocument xmlLegacyOnlyAccs = new XDocument();
+            
+            CSVToDictionary(mapPath, 1, 0);
             xmlAvaloq.Save(avqPath);
             xmlLegacy.Save(hpPath);
+
+            // Set up xml naigation names
+            HotTag htSWIUS = new HotTag();
+            htSWIUS.tagReportingGroup = "Accounts";
+            htSWIUS.tagAccBlock = "AccountReport";
+            htSWIUS.tagAccID = "Account";
+            htSWIUS.tagIndBlockowner = "Individual";
+            htSWIUS.tagIndBlocksubowner = "SubstantialOwner";
+            htSWIUS.tagIndID = "Person";
 
             // Present Menu
             ShowMenu();
@@ -175,14 +204,20 @@ namespace MergeSandbox
                         ShowMenu();
                         break;
                     case "1":
-                        Viewxml(xmlAvaloq);
+                        Viewxml(xmlAvaloq, htSWIUS);
                         break;
                     case "2":
-                        Viewxml(xmlLegacy);
+                        Viewxml(xmlLegacy,htSWIUS);
                         break;
                     case "3":
-                        ViewMapping(mapPath);
+                        ViewMapping(mapPath, mapAvqToHP, mapHPToAvq);
+                        foreach (var avqToHP in mapAvqToHP)
+                            Console.WriteLine("AvqRef={0} HPRef={1}", avqToHP.Key.PadLeft(10), avqToHP.Value.PadLeft(10));
                         break;
+                    case "4":
+                        ShowMatches(xmlLegacy, htSWIUS, mapHPToAvq);
+                        break;
+                        
                     default:
                         break;
                 }
@@ -204,22 +239,21 @@ namespace MergeSandbox
             Console.WriteLine("\nSelect option");
             Console.WriteLine("Press the Escape (Esc) key to quit: \n");
         }
-        private static void Viewxml(XDocument xdoc)
+        private static void Viewxml(XDocument xdoc,HotTag tags)
         {
             Console.WriteLine(xdoc);
-
             Console.WriteLine("\nList of Accounts:\n");
-            IEnumerable<string> names = from customers in
-                        xdoc.Descendants("AccountReport")
+            IEnumerable<string> accID = from customers in
+                        xdoc.Descendants(tags.tagAccBlock)
                                        // where (double)customers.Descendants("Payment") > 400.00
-                                        select customers.Element("Account").Value;
+                                        select customers.Element(tags.tagAccID).Value;
 
-            foreach (string strName in names)
+            foreach (string strName in accID)
             {
                 Console.WriteLine(strName);
             }
             var names2 = from customers2 in
-                        xdoc.Element("Accounts").Elements("AccountReport")
+                        xdoc.Element(tags.tagReportingGroup).Elements(tags.tagAccBlock)
                          select customers2 ;
 
             var names3 = names2.Descendants("Name").Select(v => v.Value);
@@ -231,10 +265,10 @@ namespace MergeSandbox
             Console.WriteLine("\nhit Spacebar for menu");
         }
 
-        private static void ViewMapping(string mapPath)
+        private static void ViewMapping(string mapPath, Dictionary<string,string> mapAvqToHP, Dictionary<string, string> mapHPToAvq)
         {
             Console.WriteLine("\nAvaloq to HP Mappings\n");
-            var mapAvqToHP = CSVToDictionary(mapPath, 0, 1);
+            mapAvqToHP = CSVToDictionary(mapPath, 0, 1);
             if (mapAvqToHP.ContainsKey("*ERROR*"))
             {
                 Dictionary<string, string>.ValueCollection values = mapAvqToHP.Values;
@@ -249,7 +283,7 @@ namespace MergeSandbox
             }
 
             Console.WriteLine("\nHP to Avaloq Mappings\n");
-            var mapHPToAvq = CSVToDictionary(mapPath, 1, 0);
+            mapHPToAvq = CSVToDictionary(mapPath, 1, 0);
 
             if (mapHPToAvq.ContainsKey("*ERROR*"))
             {
@@ -265,6 +299,77 @@ namespace MergeSandbox
             }
             Console.WriteLine("\nhit Spacebar for menu");
         }
+
+        private static void ShowMatches(XDocument xdoc, HotTag tags, Dictionary<string, string> mapHPToAvq)
+        {
+            // 
+            Console.WriteLine(xdoc);
+            Console.WriteLine("\nShow Matches:\n");
+            foreach (var hpToAvq in mapHPToAvq)
+                Console.WriteLine("HPRef={0} AvqRef={1}", hpToAvq.Key.PadLeft(10), hpToAvq.Value.PadLeft(10));
+            //mapHPToAvq = CSVToDictionary(mapPath, 1, 0);
+            IEnumerable<string> accID = from customers in
+                        xdoc.Descendants(tags.tagAccBlock)
+                                          //   where (double)customers.Descendants("Payment") > 400.00
+                                        select customers.Element(tags.tagAccID).Value;
+
+            foreach (string strName in accID)
+            {
+                if (mapHPToAvq.ContainsKey(strName))
+                {
+                    Console.WriteLine(strName + " Account will be merged");
+                }
+                {
+                    Console.WriteLine(strName + " Account only in Legacy file");
+                    //var names2 = from customers2 in
+                    //            xdoc.Element(tags.tagReportingGroup).Elements(tags.tagAccBlock)
+                    //            where (bool)customers2.Descendants(tags.tagAccID).Select(v => v.Value == strName)
+                    //             select customers2;
+                }
+            }
+            // Create a KeyedArray for ints (now generic).
+            KeyedArray<int> ka = new KeyedArray<int>();
+
+            // Save the ages of the Simpsons' kids.
+            ka["Bart"] = 8;
+            ka["Lisa"] = 10;
+            ka["Maggie"] = 2;
+
+            // Look up the age of Lisa.
+            Console.WriteLine("Let's find Lisa's age");
+            int age = ka["Lisa"];
+            Console.WriteLine("Lisa is {0}", age);
+
+            // Replace Bart's age with a new value (Bart already in list).
+            ka["Bart"] = 108;
+            Console.WriteLine(ka["Bart"]);
+
+            //
+            KeyedArray<string> la = new KeyedArray<string>();
+
+            // Save the likes of the Simpsons' kids.
+            string bartlike = "shorts";
+            la["Bart"] = bartlike;
+            la["Lisa"] = "sax";
+            la["Maggie"] = "dummy";
+
+            // Look up the age of Lisa.
+            Console.WriteLine("Let's find Bart's like");
+            string like = la["Bart"];
+            Console.WriteLine("Bart likes {0}", like);
+
+            // Replace Bart's age with a new value (Bart already in list).
+            var who = "Lisa";
+            la[who] = "Democracy";
+            Console.WriteLine("{0} also likes {1}", who, la[who]);
+
+            // Account Numbers
+            var avAccTag = "Account";
+            var avIndTag = "Person";
+
+            Console.WriteLine("\nhit Spacebar for menu");
+        }
+
         private static void InsertInAvq(XDocument xDocMain, string newChunk)
         {
             //xdoc.Element("Customers").Elements("Customer")
@@ -312,9 +417,7 @@ namespace MergeSandbox
                 return source;
             return source.Substring(source.Length - tailLength);
         }
-        public static string PathWithSlashes(this string source)
-        {
-            return source.Replace(@"\", @"\\");
-        }
     }
+
+
 
