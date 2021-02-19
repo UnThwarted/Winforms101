@@ -103,6 +103,29 @@ namespace MergeSandbox
                             ) // Accounts
                         );
 
+            // Add an account programatically
+            XElement fred =
+            new XElement("AccountReport",
+              new XElement("Account", "bp997"),
+              new XElement("OrgName", "bp997 Org"),
+              new XElement("Individual",
+                      new XComment("SCV:02643827"),
+                      new XElement("Person", "BP.0997"),
+                      new XElement("Name", "Fred"),
+                      new XElement("Location", "Flintstone"),
+                      new XElement("Address", "khar west Mumbai")
+                               ), // Individual
+              new XElement("Balance", "99999.90"),
+              new XElement("Payment", "999.90")
+                           ); // AccountReport
+
+            XElement newPosition = xmlAvaloq.Root.Element("Accounts");
+            XElement parentElement = xmlAvaloq.Descendants("AccountReport").LastOrDefault();
+
+            parentElement.AddAfterSelf(fred);
+
+
+
             // Create first xml document
             XDocument xmlLegacy = new XDocument(
                 new XDeclaration("1.0", "utf-8", "yes"),
@@ -168,20 +191,36 @@ namespace MergeSandbox
                                  ) // Accounts
                         );
 
+            // Set up new merge profile
+            MergeProfile mp = new MergeProfile();
+            mp.SetState("new");
+
+            
             // Save 'em
             var directory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var avqPath = Path.Combine(directory, "xmlValidate", @"AvaloqTest.xml");
-            var hpPath = Path.Combine(directory, "xmlValidate", @"HPTest.xml");
-            var mapPath = Path.Combine(directory, "xmlValidate", @"MappingAvqFirst.csv");
-            Dictionary<string, string> mapHPToAvq = new Dictionary<string, string>();
-            Dictionary<string, string> mapAvqToHP = new Dictionary<string, string>();
+            mp.filePrimary = Path.Combine(directory, "xmlValidate", @"AvaloqTest.xml");
+            mp.fileSecondary = Path.Combine(directory, "xmlValidate", @"HPTest.xml");
+            mp.fileMapping = Path.Combine(directory, "xmlValidate", @"MappingAvqFirst.csv");
+            mp.xPrimary = xmlAvaloq;
+            mp.xSecondary = xmlLegacy;
+            mp.mapPriToSec = new Dictionary<string, string>();
+            mp.mapSecToPri = new Dictionary<string, string>();
+            try
+            {
+                mp.ReadMappings();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
             XDocument xmlLegacyOnlyAccs = new XDocument();
             
-            CSVToDictionary(mapPath, 1, 0);
-            xmlAvaloq.Save(avqPath);
-            xmlLegacy.Save(hpPath);
+            xmlAvaloq.Save(mp.filePrimary);
+            xmlLegacy.Save(mp.fileSecondary);
 
-            // Set up xml naigation names
+            // Set up xml naigation name
             HotTag htSWIUS = new HotTag();
             htSWIUS.tagReportingGroup = "Accounts";
             htSWIUS.tagAccBlock = "AccountReport";
@@ -189,6 +228,41 @@ namespace MergeSandbox
             htSWIUS.tagIndBlockowner = "Individual";
             htSWIUS.tagIndBlocksubowner = "SubstantialOwner";
             htSWIUS.tagIndID = "Person";
+
+            // Read all the identifiers in both xmls
+            try
+            {
+                mp.ReadIdentifiers(htSWIUS);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            // Create a list of Secondary clients that exist in the Primary
+            try
+            {
+                mp.AssessSecondaryClients();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            // Create Primary Client Blocks
+            try
+            {
+                mp.MakeChunks(htSWIUS);
+                var barn = mp.secondaryBlocks;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            // Create Secondary Client Blocks
 
             // Present Menu
             ShowMenu();
@@ -204,18 +278,42 @@ namespace MergeSandbox
                         ShowMenu();
                         break;
                     case "1":
-                        Viewxml(xmlAvaloq, htSWIUS);
+                        //Viewxml(xmlAvaloq, htSWIUS);
+                        Console.WriteLine(mp.xPrimary);
+                        Console.WriteLine("\nList of Accounts:\n");
+                        foreach (string client in mp.priClientIds)
+                        {
+                            Console.WriteLine(client);
+                        }
+                        Console.WriteLine(" ");
+                        foreach (string person in mp.priPersonIds)
+                        {
+                            Console.WriteLine(person);
+                        }
+
+                        Console.WriteLine("\nhit Spacebar for menu");
                         break;
                     case "2":
-                        Viewxml(xmlLegacy,htSWIUS);
+                        //Viewxml(xmlLegacy,htSWIUS);
+                        Console.WriteLine(mp.xSecondary);
+                        Console.WriteLine("\nList of Accounts:\n");
+                        foreach (string client in mp.secClientIds)
+                        {
+                            Console.WriteLine(client);
+                        }
+                        Console.WriteLine(" ");
+                        foreach (string person in mp.secPersonIds)
+                        {
+                            Console.WriteLine(person);
+                        }
+
+                        Console.WriteLine("\nhit Spacebar for menu");
                         break;
                     case "3":
-                        ViewMapping(mapPath, mapAvqToHP, mapHPToAvq);
-                        foreach (var avqToHP in mapAvqToHP)
-                            Console.WriteLine("AvqRef={0} HPRef={1}", avqToHP.Key.PadLeft(10), avqToHP.Value.PadLeft(10));
+                        ViewMapping(mp);
                         break;
                     case "4":
-                        ShowMatches(xmlLegacy, htSWIUS, mapHPToAvq);
+                        ShowMatches(xmlLegacy, htSWIUS, mp.mapSecToPri);
                         break;
                         
                     default:
@@ -239,64 +337,18 @@ namespace MergeSandbox
             Console.WriteLine("\nSelect option");
             Console.WriteLine("Press the Escape (Esc) key to quit: \n");
         }
-        private static void Viewxml(XDocument xdoc,HotTag tags)
-        {
-            Console.WriteLine(xdoc);
-            Console.WriteLine("\nList of Accounts:\n");
-            IEnumerable<string> accID = from customers in
-                        xdoc.Descendants(tags.tagAccBlock)
-                                       // where (double)customers.Descendants("Payment") > 400.00
-                                        select customers.Element(tags.tagAccID).Value;
 
-            foreach (string strName in accID)
-            {
-                Console.WriteLine(strName);
-            }
-            var names2 = from customers2 in
-                        xdoc.Element(tags.tagReportingGroup).Elements(tags.tagAccBlock)
-                         select customers2 ;
-
-            var names3 = names2.Descendants("Name").Select(v => v.Value);
-            foreach (string strName3 in names3)
-            {
-                Console.WriteLine(strName3);
-            }
-
-            Console.WriteLine("\nhit Spacebar for menu");
-        }
-
-        private static void ViewMapping(string mapPath, Dictionary<string,string> mapAvqToHP, Dictionary<string, string> mapHPToAvq)
+        private static void ViewMapping(MergeProfile mp)
         {
             Console.WriteLine("\nAvaloq to HP Mappings\n");
-            mapAvqToHP = CSVToDictionary(mapPath, 0, 1);
-            if (mapAvqToHP.ContainsKey("*ERROR*"))
-            {
-                Dictionary<string, string>.ValueCollection values = mapAvqToHP.Values;
-                foreach (string message in values)
-                    Console.WriteLine("Error in mapping file : {0}\n\nhit Spacebar for menu", message);
-                return;
-            }
-            else
-            {
-                foreach (var avqToHP in mapAvqToHP)
-                    Console.WriteLine("AvqRef={0} HPRef={1}", avqToHP.Key.PadLeft(10), avqToHP.Value.PadLeft(10));
-            }
+
+            foreach (var avqToHP in mp.mapPriToSec)
+                Console.WriteLine("AvqRef={0} HPRef={1}", avqToHP.Key.PadLeft(10), avqToHP.Value.PadLeft(10));
 
             Console.WriteLine("\nHP to Avaloq Mappings\n");
-            mapHPToAvq = CSVToDictionary(mapPath, 1, 0);
 
-            if (mapHPToAvq.ContainsKey("*ERROR*"))
-            {
-                Dictionary<string, string>.ValueCollection values = mapHPToAvq.Values;
-                foreach (string message in values)
-                    Console.WriteLine("Error in mapping file: {0}\n\nhit Spacebar for menu", message);
-                return;
-            }
-            else
-            {
-                foreach (var hpToAvq in mapHPToAvq)
+            foreach (var hpToAvq in mp.mapSecToPri)
                     Console.WriteLine("HPRef={0} AvqRef={1}", hpToAvq.Key.PadLeft(10), hpToAvq.Value.PadLeft(10));
-            }
             Console.WriteLine("\nhit Spacebar for menu");
         }
 
@@ -319,6 +371,7 @@ namespace MergeSandbox
                 {
                     Console.WriteLine(strName + " Account will be merged");
                 }
+                else
                 {
                     Console.WriteLine(strName + " Account only in Legacy file");
                     //var names2 = from customers2 in
@@ -376,35 +429,6 @@ namespace MergeSandbox
             //.Where(X => X.Attribute("ID").Value == "10003").SingleOrDefault()
             //.AddBeforeSelf(
         }
-
-        static Dictionary<string, string> CSVToDictionary(string path,int colForKey, int colForValue)
-        {
-            // Read the file
-            var data = System.IO.File.ReadAllLines(path);
-
-            // Check for duplicates
-            var listCola = data.Skip(1).Select(m => m.Split(','))
-                .Select(m => m[colForKey]);
-            var colaCount = listCola.Count();
-            var colaDistinct = listCola.Distinct().Count();
-
-            var listColb = data.Skip(1).Select(m => m.Split(','))
-                .Select(m => m[colForValue]);
-            var colbCount = listColb.Count();
-            var colbDistinct = listColb.Distinct().Count();
-
-            if ((colaCount != colaDistinct) || (colbCount != colbDistinct))
-            {
-                Dictionary<string, string> nada = new Dictionary<string, string>();
-                string info = (colaCount != colaDistinct) ? "Duplicate(s) found in Key Column " : "Duplicate(s) found in Value Column ";
-                nada.Add("*ERROR*", info);
-                return nada;
-            }
-
-            // Populate the dictionary from the CSV file using the specified columns
-            return data.Skip(1).Select(m => m.Split(',')).ToDictionary(m => m[colForKey], m => m[colForValue]);
-      }
-
 
     }
 

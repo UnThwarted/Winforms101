@@ -36,31 +36,7 @@ namespace MergeSandbox
             private int Find(string targetKey)
             {
                 return _keys.IndexOf(targetKey);
-                // Here's what this line replaces from the nongeneric version:
-                //for(int i = 0; i < keys.Length; i++)
-                //{
-                //  if (String.Compare(keys[i], targetKey) == 0)
-                //  {
-                //    return i;
-                //  }
-                //}
-                //return -1;
             }
-
-            // No longer needed.
-            // FindEmpty - Find room in the array for a new entry.
-            //private int FindEmpty()
-            //{
-            //  for (int i = 0; i < keys.Length; i++)
-            //  {
-            //    if (keys[i] == null)
-            //    {
-            //      return i;
-            //    }
-            //  }
-
-            //  throw new Exception("Array is full");
-            //}
 
             // Indexer- Look up contents by string key - this is the indexer.
             //    Note that it screens out duplicate keys, but you could choose
@@ -82,16 +58,6 @@ namespace MergeSandbox
                         // Just replace the item already at that key.
                         _storedItems[index] = value;
                     }
-                    // Here's what the code above replaced:
-                    //if (index < 0)
-                    //{
-                    //  // It isn't -  find a new spot.
-                    //  index = FindEmpty();
-                    //  keys[index] = key;
-                    //}
-
-                    //// Save the object in the corresponding spot.
-                    //arrayElements[index] = value;
                 }
 
                 get
