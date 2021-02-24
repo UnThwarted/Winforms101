@@ -12,9 +12,18 @@ namespace MergeSandbox
         public string tagReportingGroup;
         public string tagAccBlock;
         public string tagAccID;
+
         public string tagIndBlockowner;
         public string tagIndBlocksubowner;
+
+        public string tagOrganisation;
+        public string tagIndividual;
+
         public string tagIndID;
+
+        public string tagAccBalCurrAtt;
+        public string tagAccBalance;
+
     }
 
 }

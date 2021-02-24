@@ -45,12 +45,15 @@
   <ItemGroup>
     <Compile Include="DataSources\AvqClient.cs" />
     <Compile Include="DataSources\InputValues.cs" />
+    <Compile Include="dsMerge.cs" />
+    <Compile Include="DTO.cs" />
     <Compile Include="HotTag.cs" />
     <Compile Include="KeyedArray.cs" />
     <Compile Include="MergeBlock.cs" />
     <Compile Include="MergeProfile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
