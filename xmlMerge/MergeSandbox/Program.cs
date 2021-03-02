@@ -68,6 +68,11 @@ namespace MergeSandbox
             htSWIUS.tagAccBalCurrAtt = "currCode";
             htSWIUS.tagOrganisation = "Organisation";
             htSWIUS.tagIndividual = "Individual";
+            htSWIUS.tagPayment = "Payment";
+            htSWIUS.tagPayType = "Type";
+            htSWIUS.tagPayAmount = "PaymentAmnt";
+            htSWIUS.tagPayCurrAttr = "currCode";
+
 
             // Read all the identifiers in both xmls
             try

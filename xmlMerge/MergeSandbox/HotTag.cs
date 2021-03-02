@@ -24,6 +24,11 @@ namespace MergeSandbox
         public string tagAccBalCurrAtt;
         public string tagAccBalance;
 
+        public string tagPayment;
+        public string tagPayType;
+        public string tagPayAmount;
+        public string tagPayCurrAttr;
+
     }
 
 }

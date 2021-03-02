@@ -13,6 +13,8 @@ namespace MergeSandbox
         public string fileSecondary;
         public string fileMapping;
 
+        public string errorLog;
+
         public XDocument xPrimary = new XDocument();
         public XDocument xSecondary = new XDocument();
         public string fileType = string.Empty;
@@ -43,18 +45,12 @@ namespace MergeSandbox
 
         public class EndOfTrain
         {
-            public XDocument xml = new XDocument();
-            //public XDocument xml = new XDocument(
-            //    new XDeclaration("1.0", "utf-8", "yes"),
-            //    new XComment("Accounts appended from secondary file as no match in primary"),
+            public XDocument xml = new XDocument(
+                new XDeclaration("1.0", "utf-8", "yes"),
+                new XComment("Accounts appended from secondary file as no match in primary"),
 
-            //    new XElement("Accounts",
-            //        new XElement("AccountReport",
-            //            new XElement("Account", "DUMMY")
-            //                    ),
-            //        new XComment("Accounts appended from secondary file as no match in primary")
-            //                ) // Accounts
-            //            );
+                new XElement("Accounts", "") // Accounts
+                        );
 
             public string state = "new";
             public string log = "";
@@ -137,7 +133,7 @@ namespace MergeSandbox
             ns = xPrimary.Root.GetDefaultNamespace();
             //if (fileType == "SWIUS")
             //{
-                
+
             //    var accs = from cust in xPrimary.Descendants(ftc + tags.tagAccBlock) select cust;
             //}
             //if (fileType == "SWICRS")
@@ -149,49 +145,29 @@ namespace MergeSandbox
             //    var accs = from cust in xPrimary.Descendants(tags.tagAccBlock) select cust;
             //}
 
-            IEnumerable<string> accID = from cust in xPrimary.Descendants(ns + tags.tagAccBlock)
-                          select cust.Element(ns + tags.tagAccID).Value;
+            // Primary file - find all Identifiers
+            priClientIds = PopulateStringListFromXdoc(xPrimary,     ns, tags.tagAccBlock, ns, tags.tagAccID);
+            priPersonIds = PopulateStringListFromXdoc(xPrimary,     ns, tags.tagAccBlock, sfa, tags.tagIndID);
+            // Secondary file - find all Identifiers
+            secClientIds = PopulateStringListFromXdoc(xSecondary,   ns, tags.tagAccBlock, ns, tags.tagAccID);
+            secPersonIds = PopulateStringListFromXdoc(xSecondary,   ns, tags.tagAccBlock, sfa, tags.tagIndID);
+        }
+
+        private List<string> PopulateStringListFromXdoc(XDocument readXdoc, XNamespace ns1, string tag1,
+                                                                            XNamespace ns2, string tag2)
+        {
+            List<string> results = new List<string>();
+
+            //var accID = from cust in readXdoc.Descendants(ns1 + tag1)
+            //            select cust.Element(ns2 + tag2).Value;
+            var accID = readXdoc.Descendants(ns1 + tag1)
+                                .Descendants(ns2 + tag2).Select(v => v.Value);
 
             foreach (string strName in accID)
             {
-                priClientIds.Add(strName);
+                results.Add(strName);
             }
-
-            var names2 = from customers2 in
-                        xPrimary.Descendants(ns + tags.tagAccBlock)
-                         select customers2;
-
-            //var names2 = from customers2 in
-            //            xPrimary.Element(ns + tags.tagReportingGroup).Elements(ns + tags.tagAccBlock)
-            //             select customers2;
-
-            var names3 = names2.Descendants(sfa + tags.tagIndID).Select(v => v.Value);
-
-            foreach (string strName3 in names3)
-            {
-                priPersonIds.Add(strName3);
-            }
-
-            // Secondary file - find all Identifiers
-            IEnumerable<string> secaccID = from customers in
-               xSecondary.Descendants(ns + tags.tagAccBlock)
-                                            // where (double)customers.Descendants("Payment") > 400.00
-                                        select customers.Element(ns + tags.tagAccID).Value;
-
-            foreach (string strName in secaccID)
-            {
-                secClientIds.Add(strName);
-            }
-            var secnames2 = from customers2 in
-                        xSecondary.Descendants(ns + tags.tagAccBlock)
-                         select customers2;
-
-            var secnames3 = secnames2.Descendants(sfa + tags.tagIndID).Select(v => v.Value);
-            foreach (string strName3 in secnames3)
-            {
-                secPersonIds.Add(strName3);
-            }
-
+            return results;
         }
 
         public void AssessSecondaryClients()
@@ -273,11 +249,14 @@ namespace MergeSandbox
                 List<XElement> soPerson = secBlock.XmlChunk.Descendants(ns + tags.tagIndBlocksubowner).ToList();
                 ExtractPeople(tags, secBlock, holderOrSubtantialOwner, soPerson);
 
+                List<XElement> payments = secBlock.XmlChunk.Descendants(ns + tags.tagPayment).ToList();
+                ExtractPayments(tags, secBlock, payments);
             }
 
             // ***********************************************
             // ** End of Train process
             // ***********************************************
+            SetEndOfTrain(tags);
             foreach (var secBlock in secBlocks)
             {
                 // mp.priClientIds.Add(clientChunk);
@@ -298,8 +277,7 @@ namespace MergeSandbox
                     //***********************************
                     //**    E R R O R S   H E R E !!!!!!
                     //***********************************
-                    XElement newPosition = endOfTrain.xml.Descendants("AccountReport").LastOrDefault();
-                    newPosition.AddAfterSelf(mbSec.XmlChunk);
+                    endOfTrain.xml.Root.Element("Accounts").Add(mbSec.XmlChunk);
                 }
                 
                 MergeBlock.nextBlockId++;
@@ -307,6 +285,28 @@ namespace MergeSandbox
 
         }
 
+        private void SetEndOfTrain(HotTag tags)
+        {
+            endOfTrain.xml = xSecondary;
+            // Remove any AccountReports that are matched in the primary
+            endOfTrain.xml.Descendants(ftc + tags.tagAccBlock)
+                .Where(e => secClientIsInPri[e.Element(ftc + tags.tagAccID).Value] == true)
+                .Remove();
+
+            // Remove any remaining empty ReportingGroups
+            endOfTrain.xml.Descendants(ftc + tags.tagReportingGroup)
+                .Where(e => e.Element(ftc + tags.tagAccBlock) == null)
+                .Remove();
+
+            // Add a comment "Added from secondary file" for each AccountReport
+            foreach (XElement eleDocCli in endOfTrain.xml.Descendants(ftc + tags.tagReportingGroup).Elements(ftc + tags.tagAccBlock))
+            {
+                        eleDocCli.AddBeforeSelf(new XComment("** Added from secondary file **"));
+            }
+
+            var a = endOfTrain.xml.ToString();
+
+        }
         private void ExtractPeople(HotTag tags, MergeBlock secBlock, string holderOrSubtantialOwner, List<XElement> ahPerson)
         {
             string orgOrIndividual = string.Empty;
@@ -325,7 +325,12 @@ namespace MergeSandbox
                     foreach (XElement p in item.Descendants(ns + orgOrIndividual))
                     {
                         personId = p.Element(sfa + tags.tagIndID) != null ? p.Element(sfa + tags.tagIndID).Value.ToString() : "";
-                        birthDate = p.Element(sfa + "BirthDate") != null ? p.Element(sfa + "BirthDate").Value.ToString() : "";
+
+                        var bd = p.Descendants(sfa + "BirthInfo").Descendants(sfa + "BirthDate").Select(s => s.Value).FirstOrDefault();
+                        birthDate = bd != null ? bd.ToString() : "";
+
+
+                        //birthDate = p.Element(sfa + "BirthDate") != null ? p.Element(sfa + "BirthDate").Value.ToString() : "";
                         if (orgOrIndividual == tags.tagOrganisation)
                         {
                             fullName = p.Element(sfa + "Name") != null ? p.Element(sfa + "Name").Value.ToString() : "";
@@ -364,5 +369,58 @@ namespace MergeSandbox
             MergeBlock.AddPerson(secBlock, mp);
         }
 
-   }
+        private void ExtractPayments(HotTag tags, MergeBlock secBlock, List<XElement> payments)
+        {
+            string payType = string.Empty;
+            string spayValue = string.Empty;
+            double payValue;
+            string payCurrency = string.Empty;
+
+            XElement xmlPayment = new XElement("dummy", "dummy");
+
+            foreach (var p in payments)
+            {
+                if (p.HasElements)
+                {
+                    //orgOrIndividual = item.Element(ns + tags.tagOrganisation) != null ? tags.tagOrganisation : tags.tagIndividual;
+                    //foreach (XElement p in item.Descendants(ns + orgOrIndividual))
+                    //{
+                    payType = p.Element(ns + tags.tagPayType) != null ? p.Element(ns + tags.tagPayType).Value.ToString() : "";
+
+                    spayValue = p.Element(ns + tags.tagPayAmount) != null ? p.Element(ns + tags.tagPayAmount).Value : "";
+
+                    try
+                    {
+                        payValue = Convert.ToDouble(spayValue);
+                    }
+                    catch (Exception)
+                    {
+
+                        errorLog = errorLog + "\n" + "Invalid Payment Amount:" + spayValue + 
+                            payments.ToString() + "\n";
+                        return;
+                    }
+                    var fred = p.Element(ns + tags.tagPayAmount);
+                    var barney = fred.Attribute(tags.tagAccBalCurrAtt);
+
+                    payCurrency = p.Element(ns + tags.tagPayAmount).Attribute(tags.tagAccBalCurrAtt) != null ?
+                                        p.Element(ns + tags.tagPayAmount).Attribute(tags.tagAccBalCurrAtt).Value : "";
+
+                    AddPayment(secBlock, payType, payValue, payCurrency, xmlPayment);
+                }
+            }
+        }
+
+        private static void AddPayment(MergeBlock secBlock, string payType, double payValue, string payCurrency, XElement xmlPayment)
+            {
+                int npy = secBlock.Payments != null ? secBlock.Payments.Count() : 0;
+                Payment py = new Payment();
+                py.PayType = payType;
+                py.PayValue = payValue;
+                py.PayCurrency = payCurrency;
+                MergeBlock.AddPayment(secBlock, py);
+            }
+
+
+    }
 }
