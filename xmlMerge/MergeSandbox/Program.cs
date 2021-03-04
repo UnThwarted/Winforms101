@@ -99,6 +99,17 @@ namespace MergeSandbox
             try
             {
                 mp.MakeChunks(htSWIUS);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            // Merge secondary chunks into Primary
+            try
+            {
+                mp.MergeIntoPrimary(htSWIUS);
                 var barn = mp.secondaryBlocks;
             }
             catch (Exception)

@@ -25,7 +25,7 @@ namespace MergeSandbox
         // "new" "assessed" "done"
         public string State { get; set; }
 
-        public static int nextBlockId = 0;
+        public static int nextBlockId = 1;
 
         public MergeBlock()
         {
@@ -82,6 +82,20 @@ namespace MergeSandbox
             }
         }
 
+        public static void AddPersonToDo(MergeBlock mb, int personIdx, ToDo ps)
+        {
+            if (mb.Persons[personIdx].ToDos == null)
+            {
+                List<ToDo> tds = new List<ToDo>();
+                tds.Add(ps);
+                mb.Persons[personIdx].ToDos = tds;
+            }
+            else
+            {
+                mb.Persons[personIdx].ToDos.Add(ps);
+            }
+        }
+
     }
 
     public class Payment
@@ -103,6 +117,7 @@ namespace MergeSandbox
         public string FullName { get; set; }
         public XElement XmlPerson { get; set; }
         public List<ToDo> ToDos { get; set; }
+        public int ExistsInPrimaryBlockId { get; set; }
         public override string ToString() => $"{PersonId}: {BirthDate:d}";
 
         public Person()
@@ -113,6 +128,7 @@ namespace MergeSandbox
             BirthDate = string.Empty;
             SCV = string.Empty;
             FullName = string.Empty;
+            ExistsInPrimaryBlockId = 0;
         }
 
         public Person(Person previousPerson)
