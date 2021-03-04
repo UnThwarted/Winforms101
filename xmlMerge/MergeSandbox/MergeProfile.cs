@@ -12,6 +12,7 @@ namespace MergeSandbox
         public string filePrimary;
         public string fileSecondary;
         public string fileMapping;
+        public string fileMerged;
 
         public string errorLog;
 
@@ -193,26 +194,6 @@ namespace MergeSandbox
 
         public void MakeChunks(HotTag tags)
         {
-            // Create Primary Client Blocks
-            //IEnumerable<XElement> clientChunks = from customers2 in
-            //            xPrimary.Descendants(ns + tags.tagAccBlock)
-            //                                     select customers2;
-
-            //foreach (var clientChunk in clientChunks)
-            //{
-            //    // mp.priClientIds.Add(clientChunk);
-            //    MergeBlock mbPri = new MergeBlock();
-            //    mbPri.BlockId = MergeBlock.nextBlockId;
-            //    mbPri.XmlChunk = clientChunk;
-
-            //    mbPri.ClientId = (from customer in
-            //            mbPri.XmlChunk.Descendants(ns + tags.tagAccID)  //.Descendants(htSWIUS.tagAccBlock)
-            //                      select customer.FirstNode)
-            //            .First().ToString();
-            //    primaryBlocks.Add(mbPri);
-            //    MergeBlock.nextBlockId++;
-            //}
-            // Create Primary Client Blocks
             var priBlocks = (from c in
                         xPrimary.Descendants(ns + tags.tagAccBlock)
                              select new MergeBlock
@@ -262,7 +243,6 @@ namespace MergeSandbox
                     MergeBlock sb = GetMergeBlock(secBlockList, secAcc);
                     foreach (Person pbp in pb.Persons)
                     {
-                        Console.WriteLine("{0} matches {1} in Primary ({2})", secAcc, pb.ClientId, pbp.FullName);
                         if (sb != null)
                         {
                             MarkTheMatches(tags, pb, pbp, sb);
@@ -323,33 +303,12 @@ namespace MergeSandbox
                     // check for a match
                     if (sbp.PersonId == pbp.PersonId && sbp.FullName == pbp.FullName)
                     {
-                        Console.WriteLine("A:{0}.{1} found matching Primary ({2})", sbp.PersonId, sbp.FullName, pbp.FullName);
                         sbp.ExistsInPrimaryBlockId = pb.BlockId;
                     }
                     if (sbp.FullName == pbp.FullName)
                     {
-                        Console.WriteLine("B:{0}.{1} found matching Primary ({2})", sbp.PersonId, sbp.FullName, pbp.FullName);
                         sbp.ExistsInPrimaryBlockId = pb.BlockId;
                     }
-                    if (sbp.ExistsInPrimaryBlockId < 1)
-                    {
-                        Console.WriteLine("*:{0}.{1} not found matching Primary ({2})", sbp.PersonId, sbp.FullName, pbp.FullName);
-
-                    }
-                }
-            }
-        }
-
-        private static void AddToDoForThoseWeNeedToAdd(HotTag tags, MergeBlock pb, MergeBlock sb)
-        {
-            foreach (Person sbp in sb.Persons)
-            {
-                // skip to next iteration if already matched
-                if (sbp.ExistsInPrimaryBlockId == 0)
-                {
-                        // Add ToDo for this person to be joined to the end of the list of individuals
-                        Console.WriteLine("xx ToDo Added for {0}.{1} to Primary ({2})", sbp.PersonId, sbp.FullName, pb.ClientId);
-                        AddToDo(sb, "Add", pb.ClientId, tags.tagIndividual, "");
                 }
             }
         }
@@ -578,18 +537,6 @@ namespace MergeSandbox
             // ** Read the Person.ToDos and append them to the client specified in the ToDo.PrimaryChunkId
             // ***********************************************************************************************
 
-            //foreach (XElement eleDocCli in xPrimary.Descendants(ftc + tags.tagReportingGroup)
-            //                                    .Elements(ftc + tags.tagAccBlock)
-            //    .Where(e => mapPriToSec.ContainsKey(e.Element(ftc + tags.tagAccID).Value) == true))
-            //{
-            //    var priAcc = eleDocCli.Element(ftc + tags.tagAccID).Value;
-            //    string secAcc;
-            //    if (!mapPriToSec.TryGetValue(priAcc, out secAcc))
-            //    {
-            //        continue;
-            //    }
-            //    else
-            //    {
             foreach (MergeBlock secBlock in secondaryBlocks)
             {
                 foreach (Person p in secBlock.Persons)
@@ -605,37 +552,16 @@ namespace MergeSandbox
                             .Where(e => e.Element(ftc + tags.tagAccID).Value == td.PrimaryChunkId);
 
                                 var xmlIndividuals = xmlPriClient.Descendants(ftc + tags.tagIndBlocksubowner);
-                                //    .Elements(ftc + tags.tagIndividual);
                                 xmlIndividuals
                                     .LastOrDefault()
-                                    .AddAfterSelf(new XElement(ftc + tags.tagIndBlocksubowner,p.XmlPerson));
-                                Console.WriteLine(p.FullName);
-                                Console.WriteLine(td.PrimaryChunkId);
-
-                            }                        }
+                                    .AddAfterSelf(new XComment("** Individual added from Secondary File **"),
+                                                    new XElement(ftc + tags.tagIndBlocksubowner,p.XmlPerson));
+                            }
+                        }
 
                     }
                 }
             }
-            //if (secBlock.ClientId == secAcc)
-            //        {
-            //            if ((secBlock.Payments != null ? secBlock.Payments.Count() : 0) > 0)
-            //            {
-            //                eleDocCli.Element(ftc + tags.tagAccBalance)                             // After Balance as Balance is a mandatory Element
-            //                    .AddAfterSelf(new XComment("** Inserted Payments - Start **"),
-            //                                    secBlock.XmlChunk.Elements(ftc + tags.tagPayment),
-            //                                  new XComment("** Inserted Payments - End **"));
-            //            }
-            //            if ((secBlock.Persons != null ? secBlock.Persons.Count() : 0) > 0)
-            //            {
-            //                Console.WriteLine("test");
-            //            }
-            //            //eleDocCli.Element(ftc + tags.tagAccBalance).AddBeforeSelf(secBlock.XmlChunk);
-            //        }
-            //    }
-
-            //}
-            //}
         }
         private void MergeInsertPayments(HotTag tags)
         {
@@ -662,11 +588,6 @@ namespace MergeSandbox
                                                     secBlock.XmlChunk.Elements(ftc + tags.tagPayment),
                                                   new XComment("** Inserted Payments - End **"));
                             }
-                            if ((secBlock.Persons != null ? secBlock.Persons.Count() : 0) > 0)
-                            {
-                                Console.WriteLine("test");
-                            }
-                            //eleDocCli.Element(ftc + tags.tagAccBalance).AddBeforeSelf(secBlock.XmlChunk);
                         }
                     }
                 }
@@ -682,47 +603,15 @@ namespace MergeSandbox
                 .AddAfterSelf(new XComment("** The following have been added from the Secondary File **"),
                                 endOfTrain.xml.Descendants(ftc + tags.tagReportingGroup).Elements());
         }
-        public void MergePayments(HotTag tags, XElement primaryXML, MergeBlock secBlock)
-        {
-            primaryXML.Element(ftc + tags.tagAccBalance)
-                .AddAfterSelf(new XComment("** Inserted Payments - Start **"),
-                                secBlock.XmlChunk.Elements(ftc + tags.tagPayment),
-                              new XComment("** Inserted Payments - End **"));
-            foreach (Payment py in secBlock.Payments)
-            {
-                foreach (ToDo td in py.ToDos)
-                {
-                    td.doneRef = 1;
-                    td.Log = "AppendedToPrimary";
-                }
-            }
-        }
-        public void MergePeople(HotTag tags, XElement primaryXML, MergeBlock secBlock)
-        {
-            foreach (XElement eleDocCli in xPrimary.Descendants(ftc + tags.tagReportingGroup)
-                                                .Elements(ftc + tags.tagAccBlock)
-                .Where(e => mapPriToSec.ContainsKey(e.Element(ftc + tags.tagAccID).Value) == true))
-            {
-                var priAcc = eleDocCli.Element(ftc + tags.tagAccID).Value;
-                string secAcc;
-                if (!mapPriToSec.TryGetValue(priAcc, out secAcc))
-                {
-                    continue;
-                }
-                else
-                {
-                    foreach (MergeBlock secBlk in secondaryBlocks)
-                    {
-                        if (secBlk.ClientId == secAcc)
-                        {
-                            eleDocCli.Element(ftc + tags.tagAccBalance).AddBeforeSelf(secBlk.XmlChunk);
-                        }
-                    }
-                }
-            }
-
-        }
 
         #endregion MergeProcessing
+
+        public void SavedMergedFile(HotTag tags)
+        {
+            xPrimary.Save(fileMerged);
+        }
+
+
+
     }
 }

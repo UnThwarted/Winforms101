@@ -9,3 +9,4 @@ C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\obj\Debug\MergeSand
 C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\obj\Debug\MergeSandbox.pdb
 C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\bin\Debug\MergeSandbox.exe
 C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\bin\Debug\MergeSandbox.pdb
+C:\Users\z923\Source\Repos\Winforms101\xmlMerge\MergeSandbox\obj\Debug\MergeSandbox.csprojResolveAssemblyReference.cache

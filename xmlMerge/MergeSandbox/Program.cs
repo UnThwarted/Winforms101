@@ -25,6 +25,7 @@ namespace MergeSandbox
             mp.filePrimary = Path.Combine(directory, "xmlValidate", @"SWI_US_AV.xml");
             mp.fileSecondary = Path.Combine(directory, "xmlValidate", @"SWI_US_HP.xml");
             mp.fileMapping = Path.Combine(directory, "xmlValidate", @"SWI_US_MapAvqFirst.csv");
+            mp.fileMerged = Path.Combine(directory, "xmlValidate", @"SWI_US_AV_Merged.xml");
             mp.xPrimary = XDocument.Load(mp.filePrimary);
             mp.xSecondary = XDocument.Load(mp.fileSecondary);
             mp.mapPriToSec = new Dictionary<string, string>();
@@ -110,7 +111,6 @@ namespace MergeSandbox
             try
             {
                 mp.MergeIntoPrimary(htSWIUS);
-                var barn = mp.secondaryBlocks;
             }
             catch (Exception)
             {
@@ -118,6 +118,17 @@ namespace MergeSandbox
                 throw;
             }
 
+            // Merge secondary chunks into Primary
+            try
+            {
+                mp.SavedMergedFile(htSWIUS);
+                Console.WriteLine("\n Merged Results Saved to {0}", mp.fileMerged);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
             // Create Secondary Client Blocks
 
             // Present Menu
